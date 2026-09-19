@@ -22,7 +22,7 @@
 ## 🎬 Live Interactive Video Proof & Walkthrough
 
 <p align="center">
-  <img src="assets/demo_recording.webp" alt="OpsPilot Full Platform Video Walkthrough" width="900" style="border-radius: 14px; border: 1px solid #CBD5E1; box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);" />
+  <img src="assets/demo_walkthrough.gif" alt="OpsPilot Full Platform Video Walkthrough" width="900" style="border-radius: 14px; border: 1px solid #CBD5E1; box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);" />
 </p>
 
 ### ⏱️ Video Demo Timestamps & Tour Highlights
