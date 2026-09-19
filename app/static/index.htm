@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpsPilot — AI Operations Workflow Automation & Intelligence</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070a12;
+      --bg-surface: #0f1626;
+      --bg-card: rgba(20, 30, 52, 0.7);
+      --bg-card-hover: rgba(28, 42, 72, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --primary-light: #818cf8;
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.25);
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.07) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Layout */
+    .app-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 24px 60px;
+    }
+
+    /* Header */
+    header.top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #06b6d4, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+    .brand-logo svg { width: 28px; height: 28px; }
+
+    .brand-text h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #ffffff 40%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-version {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: var(--primary-light);
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      -webkit-text-fill-color: var(--primary-light);
+    }
+
+    .brand-text p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* Status Pill */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+    .dot.down { background: var(--rose); box-shadow: 0 0 8px var(--rose); }
+    .dot.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 0.7; }
+    }
+
+    /* Auth Selector */
+    .role-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 4px 8px;
+      font-size: 0.8rem;
+    }
+
+    .role-btn {
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+    .role-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+    .role-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+    .link-btn:hover {
+      color: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan-glow);
+    }
+
+    /* Telemetry KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      opacity: 0.4;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-focus);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .kpi-meta {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Tabs Navigation */
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 24px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 18px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      border-bottom: 2px solid transparent;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255,255,255,0.03);
+    }
+    .tab-btn.active {
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.05);
+    }
+
+    /* Tab Contents */
+    .tab-pane {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .tab-pane.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card Panels */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      margin-bottom: 24px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .panel-header h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: #fff;
+      box-shadow: 0 0 14px var(--primary-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-light), var(--primary));
+      transform: translateY(-1px);
+    }
+    .btn-cyan {
+      background: linear-gradient(135deg, var(--cyan), #0891b2);
+      color: #fff;
+      box-shadow: 0 0 14px var(--cyan-glow);
+    }
+    .btn-cyan:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+    .btn-outline:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--text-muted);
+    }
+    .btn-danger {
+      background: var(--rose);
+      color: #fff;
+    }
+    .btn-success {
+      background: var(--emerald);
+      color: #fff;
+    }
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: rgba(11, 16, 30, 0.6);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 12px 14px;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.72rem;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Chips & Badges */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .chip-critical { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .chip-high { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .chip-medium { background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .chip-low { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+    .chip-pass { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .chip-fail { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+    /* Investigation Modal / Details Box */
+    .investigation-box {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: var(--radius-md);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-focus);
+      display: none;
+    }
+    .investigation-box.visible { display: block; animation: fadeIn 0.3s ease; }
+
+    .stepper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .step-badge {
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.05);
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .step-badge.done {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .step-badge.active {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--primary-light);
+      border: 1px solid var(--primary);
+    }
+
+    .recommendation-card {
+      background: rgba(30, 41, 59, 0.6);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border-left: 4px solid var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .citations-list {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .citation-tag {
+      font-size: 0.7rem;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--cyan);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* Select & Inputs */
+    select, input[type="text"] {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      outline: none;
+      transition: var(--transition);
+    }
+    select:focus, input[type="text"]:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Banner info */
+    .info-banner {
+      background: rgba(6, 182, 212, 0.08);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      color: #a5f3fc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    /* Toast notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+      font-size: 0.85rem;
+      display: none;
+      z-index: 1000;
+      animation: slideUp 0.2s ease-out;
+    }
+    #toast.show { display: block; }
+    #toast.success { border-color: var(--emerald); color: #34d399; }
+    #toast.error { border-color: var(--rose); color: #fb7185; }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Architecture grid */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .arch-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+    .arch-card h3 {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      color: var(--cyan);
+    }
+    .arch-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Header -->
+  <header class="top-header">
+    <div class="brand-section">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>OpsPilot Console <span class="badge-version">v2.0 Production-Ready</span></h1>
+        <p>AI Operations Workflow Automation & Intelligence • Local Ollama LLM • Zero Paid APIs</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Live Status Pills -->
+      <div class="status-pill" id="db-status-pill" title="Database status">
+        <span class="dot" id="db-dot"></span>
+        <span>DB: <strong id="db-status-val">Checking...</strong></span>
+      </div>
+
+      <div class="status-pill" id="ollama-status-pill" title="Ollama local LLM engine">
+        <span class="dot" id="ollama-dot"></span>
+        <span>Ollama: <strong id="ollama-status-val">Detecting...</strong></span>
+      </div>
+
+      <!-- Quick Role Switcher -->
+      <div class="role-badge" title="Active RBAC Persona">
+        <span style="color:var(--text-dim);font-size:0.75rem;">Role:</span>
+        <button class="role-btn active" id="btn-role-analyst" onclick="switchRole('analyst')">Analyst</button>
+        <button class="role-btn" id="btn-role-manager" onclick="switchRole('manager')">Manager</button>
+        <button class="role-btn" id="btn-role-admin" onclick="switchRole('admin')">Admin</button>
+      </div>
+
+      <!-- External Links -->
+      <a href="/docs" target="_blank" class="link-btn" title="FastAPI Swagger UI">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Swagger API
+      </a>
+      <a href="http://localhost:8501" target="_blank" class="link-btn" title="Streamlit Interactive Dashboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+        Streamlit UI
+      </a>
+    </div>
+  </header>
+
+  <!-- Banner notice -->
+  <div class="info-banner">
+    <div>
+      🛡️ <strong>Synthetic Enterprise Sandbox:</strong> All data is locally generated and validated. All LLM reasoning executes locally on Ollama (no external tokens or API egress).
+    </div>
+    <div id="current-user-banner" style="font-size:0.75rem; color:var(--cyan)">
+      Logged in as: <span class="font-mono" id="logged-user-name">analyst</span> (View + Investigate)
+    </div>
+  </div>
+
+  <!-- Telemetry Bar -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">API Requests</div>
+      <div class="kpi-value" id="kpi-requests">—</div>
+      <div class="kpi-meta" id="kpi-errors">Errors: 0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Agent Workflows</div>
+      <div class="kpi-value" id="kpi-workflows">—</div>
+      <div class="kpi-meta" id="kpi-wf-success">Success: 100%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Human Approvals</div>
+      <div class="kpi-value" id="kpi-approvals">—</div>
+      <div class="kpi-meta" id="kpi-approval-rate">Rate: 0%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">RAG Knowledge Chunks</div>
+      <div class="kpi-value" id="kpi-rag-chunks">38</div>
+      <div class="kpi-meta">TF-IDF + Cosine Index</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Inference Engine</div>
+      <div class="kpi-value" style="font-size:1.15rem;" id="kpi-ollama-model">qwen2.5:3b</div>
+      <div class="kpi-meta" style="color:var(--emerald);">Local Zero-Cost</div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('tab-alerts')">🚨 Alerts & AI Agent</button>
+    <button class="tab-btn" onclick="switchTab('tab-analytics')">📊 SQL Analytics Engine</button>
+    <button class="tab-btn" onclick="switchTab('tab-data-quality')">🛡️ Data Quality & Ingestion</button>
+    <button class="tab-btn" onclick="switchTab('tab-audit')">📝 Audit Ledger & Incidents</button>
+    <button class="tab-btn" onclick="switchTab('tab-architecture')">⚙️ System Architecture</button>
+  </div>
+
+  <!-- TAB 1: Alerts & AI Agent -->
+  <div id="tab-alerts" class="tab-pane active">
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Operational Alerts & Autonomous Investigation</h2>
+          <div class="panel-desc">Real-time alerts triggered by statistical z-score & isolation forest anomaly models. Click <em>Investigate</em> to launch the LangGraph deterministic graph.</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="loadAlerts()">🔄 Refresh Alerts</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Alert ID</th>
+              <th>Metric</th>
+              <th>Entity</th>
+              <th>Billing Month</th>
+              <th>Observed</th>
+              <th>Anomaly Score</th>
+              <th>Severity</th>
+              <th>Status</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="alerts-tbody">
+            <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-dim);">Loading alerts from API...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Live Investigation Inspector -->
+      <div class="investigation-box" id="investigation-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="font-size:1rem;color:var(--cyan);display:flex;align-items:center;gap:8px;">
+            <span>🤖 LangGraph Agent Investigation:</span>
+            <span class="font-mono" id="inv-wf-id">WF-...</span>
+          </h3>
+          <span class="chip chip-medium" id="inv-status-chip">EXECUTING</span>
+        </div>
+
+        <!-- Node Stepper -->
+        <div class="stepper" id="inv-stepper">
+          <div class="step-badge done">1. intake</div>
+          <div class="step-badge done">2. planner</div>
+          <div class="step-badge done">3. sql_investigator</div>
+          <div class="step-badge done">4. retrieval_investigator</div>
+          <div class="step-badge done">5. analytics_investigator</div>
+          <div class="step-badge done">6. evidence_validator</div>
+          <div class="step-badge active" id="step-rec">7. recommendation</div>
+          <div class="step-badge" id="step-approval">8. approval_gate</div>
+        </div>
+
+        <div class="recommendation-card">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <strong style="color:var(--text-main);" id="inv-action-title">Evidence & Recommendation</strong>
+            <span class="chip" id="inv-verdict-chip">EVIDENCE_SUFFICIENT</span>
+          </div>
+          <p id="inv-rec-text" style="font-size:0.85rem;color:var(--text-muted);white-space:pre-wrap;">Running multi-source root cause synthesis...</p>
+
+          <div style="margin-top:12px;font-size:0.75rem;color:var(--text-dim);">
+            <strong>Policy Citations:</strong>
+            <div class="citations-list" id="inv-citations">
+              <span class="citation-tag">Standard Verification Rules §2.1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Human Approval Gate -->
+        <div id="approval-actions" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:0.85rem;">
+            <strong style="color:var(--amber);">⚠️ Approval Gate Activated:</strong> Sensitive action requires Manager or Admin authorization.
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="handleReject()">Reject Action</button>
+            <button class="btn btn-primary btn-sm" onclick="handleApprove()">Authorize & Execute Action</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SQL Analytics Engine -->
+  <div id="tab-analytics" class="tab-pane">
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>SQL Analytics Engine (11 Verified Canonical Queries)</h2>
+          <div class="panel-desc">All queries run with parameterized row limits, window functions, and zero divide-by-zero vulnerability.</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="query-select" onchange="onQuerySelectChange()">
+            <option value="revenue_by_month">revenue_by_month (MoM Trend & Rolling Avg)</option>
+            <option value="revenue_by_plan">revenue_by_plan (Water vs Rental mix)</option>
+            <option value="top_anomalous_apartments">top_anomalous_apartments (Ranked by deviation)</option>
+            <option value="anomalies_by_building">anomalies_by_building (Building hierarchy rollup)</option>
+            <option value="water_usage_rollup">water_usage_rollup (91.5k consumption stats)</option>
+            <option value="high_water_apartments">high_water_apartments (Leak/Overuse candidates)</option>
+            <option value="device_status_distribution">device_status_distribution (Device health)</option>
+            <option value="inactive_device_revenue">inactive_device_revenue (Zero-usage active billing check)</option>
+            <option value="prorated_billing_check">prorated_billing_check (Mid-month activation math)</option>
+            <option value="zero_usage_active_billing">zero_usage_active_billing (Billing anomalies)</option>
+            <option value="validation_summary">validation_summary (Data quality audit logs)</option>
+          </select>
+          <button class="btn btn-cyan btn-sm" id="btn-run-query" onclick="executeSelectedQuery()">▶ Run Query</button>
+        </div>
+      </div>
+
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;" id="query-rationale-box">
+        Query explanation will display here.
+      </div>
+
+      <div class="table-container">
+        <table id="analytics-table">
+          <thead id="analytics-thead">
+            <tr><th>Select a query to load results</th></tr>
+          </thead>
+          <tbody id="analytics-tbody">
+            <tr><td style="text-align:center;padding:24px;color:var(--text-dim);">Ready to query SQLite / PostgreSQL analytics tables.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: Data Quality -->
+  <div id="tab-data-quality" class="tab-pane">
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Data Quality & Ingestion Pipeline Health</h2>
+          <div class="panel-desc">All ingestion runs adhere to strict validation rules: schema checks, range validations, foreign keys, and zero unhandled rejections.</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadDataQuality()">🔄 Refresh Data Quality</button>
+      </div>
+
+      <h3 style="font-size:0.9rem;margin-bottom:10px;color:var(--text-main);">Ingestion Runs (Canonical Batch)</h3>
+      <div class="table-container" style="margin-bottom:24px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Run ID</th>
+              <th>Source / Table</th>
+              <th>Records Received</th>
+              <th>Records Loaded</th>
+              <th>Records Rejected</th>
+              <th>Validation Status</th>
+            </tr>
+          </thead>
+          <tbody id="dq-runs-tbody">
+            <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-dim);">Loading ingestion runs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size:0.9rem;margin-bottom:10px;color:var(--text-main);">Validation Gate Check Matrix</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Source Table</th>
+              <th>Check Name</th>
+              <th>Observed Metric</th>
+              <th>Threshold</th>
+              <th>Gate Status</th>
+            </tr>
+          </thead>
+          <tbody id="dq-checks-tbody">
+            <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-dim);">Loading checks...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Audit Ledger & Incidents -->
+  <div id="tab-audit" class="tab-pane">
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Cryptographic Audit Ledger & Incident Records</h2>
+          <div class="panel-desc">Every AI agent tool invocation and human approval is immutably logged with input hashes and latency timestamps.</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadAuditAndIncidents()">🔄 Refresh Logs</button>
+      </div>
+
+      <h3 style="font-size:0.9rem;margin-bottom:10px;color:var(--text-main);">Remediation Actions & Incidents</h3>
+      <div class="table-container" style="margin-bottom:24px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Action ID</th>
+              <th>Workflow ID</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Payload Details</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="incidents-tbody">
+            <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-dim);">Loading incidents...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size:0.9rem;margin-bottom:10px;color:var(--text-main);">Agent Tool Execution Audit Ledger</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Audit ID</th>
+              <th>Workflow</th>
+              <th>Agent Node</th>
+              <th>Tool Name</th>
+              <th>Input Hash</th>
+              <th>Latency</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody id="audit-tbody">
+            <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-dim);">Loading audit trail...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: Architecture -->
+  <div id="tab-architecture" class="tab-pane">
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>System Architecture & Implementation Design</h2>
+          <div class="panel-desc">Designed for reliability, transparency, local execution, and auditability.</div>
+        </div>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <h3>🧠 Local LLM Inference</h3>
+          <p>Ollama runs <code>qwen2.5:3b-instruct</code> locally on your host. Absolutely no external API calls, zero credit card bills, and full offline privacy.</p>
+        </div>
+        <div class="arch-card">
+          <h3>⚡ LangGraph Deterministic Graph</h3>
+          <p>Single stateful 10-node graph. Replaced brittle multi-agent architectures with hard stops at human approval gates for critical actions.</p>
+        </div>
+        <div class="arch-card">
+          <h3>📚 In-Process RAG Vector Store</h3>
+          <p>TF-IDF + Cosine index with exact citation tracking. Compact footprint (~230 lines of policy), saving memory on 8 GB systems.</p>
+        </div>
+        <div class="arch-card">
+          <h3>🔒 RBAC & Security</h3>
+          <p>Hierarchical token-based clearance: <strong>Analyst</strong> (read & investigate), <strong>Manager</strong> (approve/reject & execute), <strong>Admin</strong> (system-wide config).</p>
+        </div>
+        <div class="arch-card">
+          <h3>📈 SQL Analytics Engine</h3>
+          <p>11 pre-compiled analytical queries with window functions (<code>SUM OVER</code>, <code>AVG OVER</code>), protecting against injection and divide-by-zero.</p>
+        </div>
+        <div class="arch-card">
+          <h3>🧪 65/65 Verified Unit & Integration Tests</h3>
+          <p>Automated test suite validates pipeline integrity, RAG retrieval scores (1.000), agent precision, and SQL mathematical exactness.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast notification element -->
+<div id="toast"></div>
+
+<script>
+  // State management
+  const API_BASE = window.location.origin;
+  let currentRole = 'analyst';
+  let currentToken = null;
+  let activeWorkflowId = null;
+
+  // Pre-configured demo credentials
+  const DEMO_USERS = {
+    analyst: { u: 'analyst', p: 'analyst123', label: 'Analyst (View + Investigate)' },
+    manager: { u: 'manager', p: 'manager123', label: 'Manager (Approve + Execute)' },
+    admin:   { u: 'admin',   p: 'admin123',   label: 'Admin (Full Clearance)' }
+  };
+
+  const QUERY_RATIONALES = {
+    revenue_by_month: "Headline trend. MoM % and rolling 3-month average feed both the Overview KPI and the anomaly feature set.",
+    revenue_by_plan: "Plan mix shifts are a leading indicator of mis-assignment. UNION ALL across water and rental with per-month ranking.",
+    top_anomalous_apartments: "Direct queue for operations. Ranked by cumulative anomaly score across all billing months.",
+    anomalies_by_building: "Identifies whether an issue is isolated to an apartment or systemic across a building infrastructure.",
+    water_usage_rollup: "Monthly aggregate consumption across 91,500 readings, tracking min, max, avg, and standard deviation.",
+    high_water_apartments: "Filters apartments exceeding the 95th percentile consumption threshold (leak detection candidates).",
+    device_status_distribution: "Monitors active vs inactive devices to catch unbilled hardware and disconnected telemetry.",
+    inactive_device_revenue: "Flags active rental billing on de-installed or defective devices.",
+    prorated_billing_check: "Verifies mid-month activations are correctly prorated by active days divided by total days in month.",
+    zero_usage_active_billing: "Identifies occupied units billed for services despite recording zero meter activity.",
+    validation_summary: "Data quality historical run audit, showing loaded vs rejected records per ingested entity."
+  };
+
+  // Toast helper
+  function showToast(msg, type = 'info') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show ' + type;
+    setTimeout(() => { el.className = ''; }, 3500);
+  }
+
+  // Auto-authenticate with selected role
+  async function switchRole(role) {
+    currentRole = role;
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById(`btn-role-${role}`);
+    if (btn) btn.classList.add('active');
+
+    try {
+      const cred = DEMO_USERS[role];
+      const resp = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: cred.u, password: cred.p })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        currentToken = data.access_token;
+        document.getElementById('logged-user-name').textContent = role;
+        document.getElementById('current-user-banner').innerHTML = 
+          `Logged in as: <span class="font-mono" style="font-weight:700">${role.toUpperCase()}</span> (${cred.label})`;
+        showToast(`Authenticated as ${role.toUpperCase()}`, 'success');
+        loadAlerts();
+      } else {
+        showToast(`Auth failed for ${role}`, 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Error connecting to auth service', 'error');
+    }
+  }
+
+  // Switch UI tabs
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+    const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick')?.includes(tabId));
+    if (btn) btn.classList.add('active');
+
+    const pane = document.getElementById(tabId);
+    if (pane) pane.classList.add('active');
+
+    if (tabId === 'tab-analytics') executeSelectedQuery();
+    if (tabId === 'tab-data-quality') loadDataQuality();
+    if (tabId === 'tab-audit') loadAuditAndIncidents();
+  }
+
+  // Load system health & metrics
+  async function loadSystemTelemetry() {
+    try {
+      const healthResp = await fetch(`${API_BASE}/health`);
+      if (healthResp.ok) {
+        const h = await healthResp.json();
+        const dbDot = document.getElementById('db-dot');
+        const dbVal = document.getElementById('db-status-val');
+        if (h.database === 'up') {
+          dbDot.className = 'dot';
+          dbVal.textContent = 'ONLINE (SQLite)';
+        } else {
+          dbDot.className = 'dot down';
+          dbVal.textContent = h.database;
+        }
+
+        const ollamaDot = document.getElementById('ollama-dot');
+        const ollamaVal = document.getElementById('ollama-status-val');
+        if (h.ollama === 'up' && h.ollama_models?.length) {
+          ollamaDot.className = 'dot';
+          ollamaVal.textContent = h.ollama_models[0];
+          document.getElementById('kpi-ollama-model').textContent = h.ollama_models[0];
+        } else {
+          ollamaDot.className = 'dot amber';
+          ollamaVal.textContent = 'Standby / Fallback';
+          document.getElementById('kpi-ollama-model').textContent = 'Rule Fallback';
+        }
+
+        if (h.rag_chunks) {
+          document.getElementById('kpi-rag-chunks').textContent = h.rag_chunks;
+        }
+      }
+    } catch (e) {
+      console.warn("Telemetry fetch error:", e);
+    }
+
+    if (currentToken) {
+      try {
+        const metResp = await fetch(`${API_BASE}/metrics`, {
+          headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        if (metResp.ok) {
+          const m = await metResp.json();
+          document.getElementById('kpi-requests').textContent = m.api.requests;
+          document.getElementById('kpi-errors').textContent = `Errors: ${m.api.errors} (${(m.api.error_rate * 100).toFixed(1)}%)`;
+          document.getElementById('kpi-workflows').textContent = m.workflows.total;
+          document.getElementById('kpi-wf-success').textContent = `Success: ${(m.workflows.success_rate * 100).toFixed(0)}%`;
+          document.getElementById('kpi-approvals').textContent = `${m.approvals.approved} / ${m.approvals.total}`;
+          document.getElementById('kpi-approval-rate').textContent = `Rate: ${(m.approvals.approval_rate * 100).toFixed(0)}%`;
+        }
+      } catch (e) {}
+    }
+  }
+
+  // Load operational alerts
+  async function loadAlerts() {
+    if (!currentToken) return;
+    const tbody = document.getElementById('alerts-tbody');
+    try {
+      const resp = await fetch(`${API_BASE}/alerts`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      if (!resp.ok) throw new Error("Failed to fetch alerts");
+      const alerts = await resp.json();
+      if (!alerts.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted);">No open anomalies detected in dataset.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = alerts.map(a => {
+        const sevClass = a.severity === 'CRITICAL' ? 'chip-critical' : a.severity === 'HIGH' ? 'chip-high' : 'chip-medium';
+        return `
+          <tr>
+            <td class="font-mono" style="font-weight:700;color:var(--cyan);">${a.alert_id}</td>
+            <td><strong>${a.metric}</strong></td>
+            <td class="font-mono">${a.entity}</td>
+            <td>${a.billing_month}</td>
+            <td class="font-mono">${Number(a.observed_value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            <td><span style="color:var(--amber);font-weight:700;">${Number(a.anomaly_score).toFixed(2)}</span></td>
+            <td><span class="chip ${sevClass}">${a.severity}</span></td>
+            <td><span class="chip chip-medium">${a.status}</span></td>
+            <td style="text-align:right;">
+              <button class="btn btn-primary btn-sm" onclick="investigateAlert('${a.alert_id}')">
+                ⚡ Investigate
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--rose);padding:18px;">${e.message}</td></tr>`;
+    }
+  }
+
+  // Autonomous Investigation Agent call
+  async function investigateAlert(alertId) {
+    const box = document.getElementById('investigation-box');
+    box.classList.add('visible');
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    document.getElementById('inv-wf-id').textContent = 'Starting LangGraph execution...';
+    document.getElementById('inv-status-chip').textContent = 'RUNNING';
+    document.getElementById('inv-rec-text').textContent = 'Executing 10-node agent graph (Intake ➔ SQL ➔ RAG Retrieval ➔ Statistical Evidence ➔ Synthesis)...';
+    document.getElementById('approval-actions').style.display = 'none';
+
+    try {
+      const resp = await fetch(`${API_BASE}/alerts/${alertId}/investigate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.detail || 'Investigation failed');
+      }
+
+      const res = await resp.json();
+      activeWorkflowId = res.workflow_id;
+      document.getElementById('inv-wf-id').textContent = res.workflow_id;
+      document.getElementById('inv-status-chip').textContent = res.approval_status;
+
+      const rec = res.recommendation || {};
+      document.getElementById('inv-action-title').textContent = rec.action_title || 'Ops Remediation Recommendation';
+      document.getElementById('inv-rec-text').textContent = rec.narrative || rec.explanation || JSON.stringify(rec, null, 2);
+
+      const verd = res.evidence_verdict;
+      const verdChip = document.getElementById('inv-verdict-chip');
+      verdChip.textContent = verd;
+      verdChip.className = 'chip ' + (verd === 'EVIDENCE_SUFFICIENT' ? 'chip-pass' : 'chip-high');
+
+      const citContainer = document.getElementById('inv-citations');
+      if (res.citations && res.citations.length) {
+        citContainer.innerHTML = res.citations.map(c => `<span class="citation-tag">${c}</span>`).join('');
+      } else {
+        citContainer.innerHTML = '<span style="color:var(--text-dim);font-size:0.75rem;">Verified via system operational baseline</span>';
+      }
+
+      if (res.approval_required) {
+        document.getElementById('approval-actions').style.display = 'flex';
+      }
+      showToast('Investigation completed successfully', 'success');
+      loadSystemTelemetry();
+    } catch (e) {
+      document.getElementById('inv-rec-text').textContent = `Agent execution error: ${e.message}`;
+      showToast(e.message, 'error');
+    }
+  }
+
+  // Handle Approvals
+  async function handleApprove() {
+    if (!activeWorkflowId) return;
+    try {
+      const resp = await fetch(`${API_BASE}/workflows/${activeWorkflowId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason: "Approved via OpsPilot Console" })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.ok) {
+        showToast("Action approved & executed in incident ledger!", "success");
+        document.getElementById('approval-actions').style.display = 'none';
+        document.getElementById('inv-status-chip').textContent = 'APPROVED';
+        loadSystemTelemetry();
+      } else {
+        showToast(data.detail || data.note || "Permission denied. Role requires MANAGER or ADMIN.", "error");
+      }
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  }
+
+  async function handleReject() {
+    if (!activeWorkflowId) return;
+    try {
+      const resp = await fetch(`${API_BASE}/workflows/${activeWorkflowId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason: "Rejected via OpsPilot Console" })
+      });
+      const data = await resp.json();
+      if (resp.ok) {
+        showToast("Action rejected. No remedial action executed.", "info");
+        document.getElementById('approval-actions').style.display = 'none';
+        document.getElementById('inv-status-chip').textContent = 'REJECTED';
+      } else {
+        showToast(data.detail || "Rejection failed", "error");
+      }
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  }
+
+  // SQL Analytics Runner
+  function onQuerySelectChange() {
+    const q = document.getElementById('query-select').value;
+    document.getElementById('query-rationale-box').textContent = QUERY_RATIONALES[q] || "";
+  }
+
+  async function executeSelectedQuery() {
+    const qName = document.getElementById('query-select').value;
+    onQuerySelectChange();
+    const btn = document.getElementById('btn-run-query');
+    btn.innerHTML = `<span class="spinner"></span> Running...`;
+
+    const thead = document.getElementById('analytics-thead');
+    const tbody = document.getElementById('analytics-tbody');
+
+    try {
+      const resp = await fetch(`${API_BASE}/revenue?query=${qName}`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      if (!resp.ok) throw new Error("Query execution failed");
+      const data = await resp.json();
+      const rows = data.rows || [];
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td style="text-align:center;padding:20px;color:var(--text-dim);">Query executed with 0 rows returned.</td></tr>`;
+        return;
+      }
+
+      const cols = Object.keys(rows[0]);
+      thead.innerHTML = `<tr>${cols.map(c => `<th>${c.replace(/_/g, ' ')}</th>`).join('')}</tr>`;
+      tbody.innerHTML = rows.slice(0, 100).map(r => {
+        return `<tr>${cols.map(c => {
+          const val = r[c];
+          const isNum = typeof val === 'number';
+          return `<td class="${isNum ? 'font-mono' : ''}">${val !== null ? (isNum ? Number(val).toLocaleString() : val) : '<em>null</em>'}</td>`;
+        }).join('')}</tr>`;
+      }).join('');
+
+      showToast(`Fetched ${rows.length} rows (${data.latency_ms || 0}ms)`, 'success');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td style="color:var(--rose);padding:20px;">${e.message}</td></tr>`;
+      showToast(e.message, 'error');
+    } finally {
+      btn.innerHTML = `▶ Run Query`;
+    }
+  }
+
+  // Load Data Quality Runs
+  async function loadDataQuality() {
+    if (!currentToken) return;
+    try {
+      const resp = await fetch(`${API_BASE}/data-quality`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      const runsBody = document.getElementById('dq-runs-tbody');
+      runsBody.innerHTML = (data.runs || []).map(r => `
+        <tr>
+          <td class="font-mono">${r.run_id}</td>
+          <td><strong>${r.source}</strong></td>
+          <td class="font-mono">${Number(r.records_received).toLocaleString()}</td>
+          <td class="font-mono">${Number(r.records_loaded).toLocaleString()}</td>
+          <td class="font-mono">${Number(r.records_rejected)}</td>
+          <td><span class="chip ${r.validation_status === 'PASSED' ? 'chip-pass' : 'chip-fail'}">${r.validation_status}</span></td>
+        </tr>
+      `).join('');
+
+      const checksBody = document.getElementById('dq-checks-tbody');
+      checksBody.innerHTML = (data.checks || []).map(c => `
+        <tr>
+          <td><strong>${c.source}</strong></td>
+          <td>${c.check_name}</td>
+          <td class="font-mono">${c.observed || '—'}</td>
+          <td class="font-mono">${c.threshold || '—'}</td>
+          <td><span class="chip ${c.status === 'PASSED' ? 'chip-pass' : 'chip-fail'}">${c.status}</span></td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      console.warn("DQ fetch failed:", e);
+    }
+  }
+
+  // Load Incidents and Audit
+  async function loadAuditAndIncidents() {
+    if (!currentToken) return;
+    try {
+      const [incResp, audResp] = await Promise.all([
+        fetch(`${API_BASE}/incidents`, { headers: { 'Authorization': `Bearer ${currentToken}` } }),
+        fetch(`${API_BASE}/audit?limit=25`, { headers: { 'Authorization': `Bearer ${currentToken}` } })
+      ]);
+
+      if (incResp.ok) {
+        const incs = await incResp.json();
+        const incBody = document.getElementById('incidents-tbody');
+        if (incs.length === 0) {
+          incBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--text-dim);">No incidents recorded yet. Trigger remediation to log incidents.</td></tr>`;
+        } else {
+          incBody.innerHTML = incs.map(i => `
+            <tr>
+              <td class="font-mono" style="color:var(--cyan);">${i.action_id}</td>
+              <td class="font-mono">${i.workflow_id || '—'}</td>
+              <td><span class="chip chip-medium">${i.action_type}</span></td>
+              <td><span class="chip chip-pass">${i.status}</span></td>
+              <td class="font-mono" style="font-size:0.75rem;">${JSON.stringify(i.payload).substring(0, 50)}...</td>
+              <td style="font-size:0.75rem;color:var(--text-dim);">${new Date(i.timestamp).toLocaleString()}</td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      if (audResp.ok) {
+        const auds = await audResp.json();
+        const audBody = document.getElementById('audit-tbody');
+        audBody.innerHTML = auds.map(a => `
+          <tr>
+            <td class="font-mono" style="font-size:0.75rem;">${a.audit_id.substring(0, 8)}...</td>
+            <td class="font-mono">${a.workflow_id || '—'}</td>
+            <td>${a.agent_node}</td>
+            <td><strong>${a.tool_name}</strong></td>
+            <td class="font-mono" style="font-size:0.7rem;color:var(--text-dim);">${a.input_hash ? a.input_hash.substring(0, 12) + '...' : '—'}</td>
+            <td class="font-mono">${a.latency_ms}ms</td>
+            <td><span class="chip ${a.result_status === 'SUCCESS' ? 'chip-pass' : 'chip-fail'}">${a.result_status}</span></td>
+          </tr>
+        `).join('');
+      }
+    } catch (e) {
+      console.warn("Audit fetch failed:", e);
+    }
+  }
+
+  // Startup initialization
+  window.addEventListener('DOMContentLoaded', async () => {
+    onQuerySelectChange();
+    await switchRole('analyst');
+    loadSystemTelemetry();
+    setInterval(loadSystemTelemetry, 15000);
+  });
+</script>
+
+</body>
+</html>

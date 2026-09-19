@@ -1,0 +1,4 @@
+water_plan_id,plan_name,base_fee,rate_per_m3,effective_from,effective_to
+WPLAN-001,Water Basic,150,35,2026-01-01,2026-12-31
+WPLAN-002,Water Standard,200,40,2026-01-01,2026-12-31
+WPLAN-003,Water Premium,300,48,2026-01-01,2026-12-31

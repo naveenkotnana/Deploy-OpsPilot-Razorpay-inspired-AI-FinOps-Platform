@@ -1,0 +1,9 @@
+field,dataset,description,data_type
+apartment_id,Apartment master,Anonymized apartment identifier,STRING
+device_id,Device master,Anonymized device identifier,STRING
+service_type,Device master,WATER or RENTAL,STRING
+consumption_m3,Usage,Water consumption in cubic meters,DECIMAL
+water_revenue,Billing,Calculated water revenue,DECIMAL
+rental_revenue,Billing,Calculated rental revenue,DECIMAL
+total_revenue,Billing,Water + rental revenue,DECIMAL
+validation_flag,Billing,PASS or MANUAL_REVIEW,STRING

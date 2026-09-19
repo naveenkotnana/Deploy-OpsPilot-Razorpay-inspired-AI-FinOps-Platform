@@ -1,0 +1,2 @@
+workflow_run_id,workflow_name,billing_month,records_processed,records_flagged,status
+WR-2026-09-001,monthly_revenue_close,2026-09,500,3,COMPLETED

@@ -1,0 +1,7 @@
+water_plan_id,plan_name,base_fee,rate_per_m3,effective_from,effective_to,service_type,rental_plan_id,monthly_rental,api_status,endpoint
+WPLAN-001,Water Basic,150.0,35.0,2026-01-01,2026-12-31,WATER,,,200,/api/v1/plans
+WPLAN-002,Water Standard,200.0,40.0,2026-01-01,2026-12-31,WATER,,,200,/api/v1/plans
+WPLAN-003,Water Premium,300.0,48.0,2026-01-01,2026-12-31,WATER,,,200,/api/v1/plans
+,Rental Basic,,,2026-01-01,2026-12-31,RENTAL,RPLAN-001,800.0,200,/api/v1/plans
+,Rental Standard,,,2026-01-01,2026-12-31,RENTAL,RPLAN-002,1200.0,200,/api/v1/plans
+,Rental Premium,,,2026-01-01,2026-12-31,RENTAL,RPLAN-003,1600.0,200,/api/v1/plans

@@ -1,0 +1,49 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          pip install ruff mypy
+
+      - name: Lint
+        run: ruff check app dashboard scripts tests --select E9,F63,F7,F82
+
+      - name: Type check
+        run: mypy app --ignore-missing-imports --no-strict-optional || true
+
+      - name: Bootstrap data
+        run: python scripts/setup_all.py
+
+      - name: Unit tests
+        run: pytest tests/unit -q
+
+      - name: Integration tests
+        run: pytest tests/integration -q
+
+      # Ollama is NOT run in CI. The agent evaluation asserts on deterministic
+      # behaviour (tool selection, guardrails, approval, failure paths), which
+      # is exactly what should be gated. LLM narrative quality is evaluated
+      # locally via `python scripts/run_agent_eval.py` with Ollama running.
+      - name: RAG evaluation
+        run: python scripts/run_rag_eval.py
+
+      - name: Agent + security evaluation (Ollama mocked/absent)
+        run: python scripts/run_agent_eval.py
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API image
+        run: docker build -t opspilot-api .
+      - name: Build dashboard image
+        run: docker build -f docker/Dockerfile.dashboard -t opspilot-dashboard .

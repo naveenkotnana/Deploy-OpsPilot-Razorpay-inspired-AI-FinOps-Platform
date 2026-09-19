@@ -1,0 +1,61 @@
+# FDE-style customer configuration.
+# ONE codebase, three configurations. Nothing below forks the core system —
+# it selects data sources, tools, and policy thresholds at runtime.
+
+customer_a:
+  customer_id: CUST-A
+  name: DemoPropertyGroup
+  domain: Subscription / device revenue
+  currency: INR
+  classification: SYNTHETIC
+  data_sources: [apartment_master, device_service_master, water_usage_data,
+                 rental_plan_data, water_plan_data, device_plan_assignments]
+  schemas: {revenue_grain: apartment_month, entity: location_code}
+  allowed_tools: [sql_tool, rag_tool, analytics_tool, create_incident,
+                  create_ticket, send_notification]
+  policies:
+    severity_thresholds: {LOW: 8, MEDIUM: 15, HIGH: 25, CRITICAL: 40}
+    ml_only_detection_max_severity: LOW
+  workflow_rules: {alert_min_severity: MEDIUM}
+  approval_rules:
+    require_approval_for: [create_incident, create_ticket, send_notification]
+    approver_roles: [MANAGER, ADMIN]
+  notification_channels: [ops-alerts]
+
+customer_b:
+  customer_id: CUST-B
+  name: DemoSupportOrg
+  domain: Customer support operations
+  currency: INR
+  classification: SYNTHETIC
+  data_sources: [exception_history, workflow_runs, audit_logs]
+  schemas: {revenue_grain: none, entity: queue}
+  allowed_tools: [sql_tool, rag_tool, analytics_tool, create_ticket]
+  policies:
+    # Support tolerates more volume variance before escalating.
+    severity_thresholds: {LOW: 15, MEDIUM: 30, HIGH: 50, CRITICAL: 75}
+    ml_only_detection_max_severity: LOW
+  workflow_rules: {alert_min_severity: HIGH}
+  approval_rules:
+    require_approval_for: [create_ticket]
+    approver_roles: [MANAGER, ADMIN]
+  notification_channels: [support-escalation]
+
+customer_c:
+  customer_id: CUST-C
+  name: DemoInternalIT
+  domain: Internal IT operations
+  currency: INR
+  classification: SYNTHETIC
+  data_sources: [audit_logs, workflow_runs, ingestion_runs]
+  schemas: {revenue_grain: none, entity: service}
+  allowed_tools: [sql_tool, analytics_tool, create_incident, send_notification]
+  policies:
+    # IT incidents escalate aggressively.
+    severity_thresholds: {LOW: 5, MEDIUM: 10, HIGH: 20, CRITICAL: 30}
+    ml_only_detection_max_severity: MEDIUM
+  workflow_rules: {alert_min_severity: MEDIUM}
+  approval_rules:
+    require_approval_for: [create_incident, send_notification]
+    approver_roles: [ADMIN]
+  notification_channels: [it-oncall]

@@ -1,0 +1,57 @@
+# Ollama deliberately runs on the HOST, not in a container.
+# Reason: the GTX 1650 has 4 GB VRAM. Containerised Ollama on Windows would go
+# through WSL2 and lose direct GPU access, forcing slow CPU inference. Services
+# reach the host via host.docker.internal.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: opspilot
+      POSTGRES_PASSWORD: opspilot
+      POSTGRES_DB: opspilot
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opspilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      postgres: {condition: service_healthy}
+    environment:
+      DATABASE_URL: postgresql+psycopg2://opspilot:opspilot@postgres:5432/opspilot
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b-instruct}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
+    ports: ["8000:8000"]
+    volumes: ["./data:/app/data"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    command: >
+      sh -c "python scripts/setup_all.py &&
+             uvicorn app.api.main:app --host 0.0.0.0 --port 8000"
+
+  dashboard:
+    build: {context: ., dockerfile: docker/Dockerfile.dashboard}
+    depends_on: [api]
+    environment:
+      API_BASE_URL: http://api:8000
+    ports: ["8501:8501"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+
+  worker:
+    build: .
+    depends_on:
+      postgres: {condition: service_healthy}
+    environment:
+      DATABASE_URL: postgresql+psycopg2://opspilot:opspilot@postgres:5432/opspilot
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    # Periodic recompute: revenue + anomaly detection.
+    command: >
+      sh -c "while true; do python scripts/run_batch.py; sleep 3600; done"
+
+volumes:
+  pgdata:

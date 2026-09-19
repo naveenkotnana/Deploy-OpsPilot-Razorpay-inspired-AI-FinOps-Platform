@@ -1,0 +1,4 @@
+rental_plan_id,plan_name,monthly_rental,effective_from,effective_to
+RPLAN-001,Rental Basic,800,2026-01-01,2026-12-31
+RPLAN-002,Rental Standard,1200,2026-01-01,2026-12-31
+RPLAN-003,Rental Premium,1600,2026-01-01,2026-12-31

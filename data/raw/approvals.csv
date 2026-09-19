@@ -1,0 +1,2 @@
+approval_id,workflow_run_id,requested_action,requested_by,decision
+APR-2026-09-001,WR-2026-09-001,Approve monthly revenue close,OPS-SVC,PENDING

@@ -1,0 +1,46 @@
+TITLE: Data Quality SOP
+DOCUMENT_ID: DOC-003
+DOCUMENT_TYPE: SOP
+VERSION: 1.9
+EFFECTIVE_DATE: 2026-01-01
+DEPARTMENT: Data Engineering
+ACCESS_LEVEL: INTERNAL
+CLASSIFICATION: SYNTHETIC
+
+1. PRINCIPLE
+Bad data is flagged, never silently repaired. Every ingestion run records a
+run_id, source, record counts, and a validation status of PASS, WARN, or FAIL.
+
+2. MANDATORY CHECKS
+Every source is subject to SCHEMA_MATCH, NULL_RATE, DUPLICATE_RATE, ROW_COUNT,
+VALUE_RANGE, DATE_VALIDITY, and REFERENTIAL_INTEGRITY. Usage sources are
+additionally subject to FRESHNESS.
+
+3. FAILURE BEHAVIOUR
+A FAIL status blocks loading for that source. The run is recorded with
+records_loaded zero and records_rejected equal to records_received. A WARN
+status permits loading but creates a data quality item for review.
+
+4. DUPLICATE READINGS
+Two readings for the same device on the same usage date inflate water revenue
+directly. Duplicate usage_id values are rejected at load. Same device same date
+duplicates are surfaced by the duplicate_usage analytics query and reviewed
+monthly.
+
+5. REFERENTIAL INTEGRITY
+Usage rows must reference a device present in the device master. Devices must
+reference an apartment. Apartments must reference a building. Orphan records are
+rejected, not auto-created.
+
+6. MISSING USAGE
+A water device with active days greater than zero and no usage readings in the
+billing month raises MISSING_USAGE. Consumption is recorded as zero and the row
+is flagged. Consumption is not back-filled from prior months.
+
+7. FRESHNESS
+Usage data is expected to cover the billing month through its final day. A
+latest usage date earlier than the billing month end raises a WARN.
+
+8. RETENTION
+Validation results are retained per run and are never overwritten, so that a
+historical close can be reproduced exactly.

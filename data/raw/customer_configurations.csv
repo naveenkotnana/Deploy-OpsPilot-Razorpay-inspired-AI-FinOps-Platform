@@ -1,0 +1,2 @@
+config_id,customer_group,currency,billing_month,enabled_services,classification
+CFG-001,DemoPropertyGroup,INR,2026-09,WATER+RENTAL,SYNTHETIC

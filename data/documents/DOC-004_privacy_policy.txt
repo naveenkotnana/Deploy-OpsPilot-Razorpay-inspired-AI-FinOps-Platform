@@ -1,0 +1,35 @@
+TITLE: Data Privacy Policy
+DOCUMENT_ID: DOC-004
+DOCUMENT_TYPE: POLICY
+VERSION: 3.0
+EFFECTIVE_DATE: 2026-01-01
+DEPARTMENT: Compliance
+ACCESS_LEVEL: PUBLIC
+CLASSIFICATION: SYNTHETIC
+
+1. ANONYMISED IDENTIFIERS ONLY
+The platform stores anonymised surrogate identifiers only. Apartment, building,
+and device identifiers are surrogate codes. No customer name, phone number,
+email address, or postal address is stored or processed.
+
+2. NO PERSONAL DATA
+No personally identifiable information enters the pipeline at any stage,
+including logs, audit records, and LLM prompts.
+
+3. LOCAL INFERENCE
+All language model inference runs locally through Ollama. No data is sent to an
+external or paid language model API. Retrieval, embedding, and generation all
+execute on the local host.
+
+4. SYNTHETIC DATA
+All data in this environment is synthetic and generated for demonstration. It
+does not represent real customers, real revenue, or real operational events.
+
+5. LOG CONTENT
+Structured logs record identifiers, workflow ids, and trace ids. Tool inputs are
+recorded as a hash rather than raw content in the audit log.
+
+6. ACCESS LEVELS
+Documents carry an access_level of PUBLIC, INTERNAL, or RESTRICTED. Retrieval
+filters documents by the requesting role's clearance. A role may never retrieve
+a document above its clearance.

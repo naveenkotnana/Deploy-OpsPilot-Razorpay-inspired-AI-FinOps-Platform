@@ -1,0 +1,42 @@
+TITLE: Plan Validation Policy
+DOCUMENT_ID: DOC-002
+DOCUMENT_TYPE: POLICY
+VERSION: 1.4
+EFFECTIVE_DATE: 2026-01-01
+DEPARTMENT: Revenue Assurance
+ACCESS_LEVEL: INTERNAL
+CLASSIFICATION: SYNTHETIC
+
+1. SINGLE ACTIVE PLAN RULE
+Each apartment and service combination should have one applicable plan per
+billing period. Overlapping plans and expired plans are exceptions.
+
+2. OVERLAPPING PLANS
+If more than one plan assignment has status ACTIVE for the same apartment and
+service type, the condition is MULTIPLE_ACTIVE_PLANS. This is a double-billing
+risk and is treated as deterministic, not probabilistic. Billing for that
+apartment is held until Revenue Assurance resolves the assignment.
+
+3. EXPIRED PLANS
+A plan whose effective_to date precedes the billing month start is expired. An
+expired plan must not be used for calculation. The exception code is
+INVALID_PLAN.
+
+4. UNKNOWN PLAN REFERENCE
+If a device plan assignment references a plan_id absent from the plan master,
+the exception code is INVALID_WATER_PLAN or INVALID_RENTAL_PLAN. The row does
+not bill.
+
+5. MISSING PLAN
+A device active during the billing month with no ACTIVE plan assignment raises
+MISSING_WATER_PLAN or MISSING_RENTAL_PLAN. Revenue is not estimated from a peer
+apartment or from the location average.
+
+6. PLAN CHANGE MID MONTH
+Where a plan changes within a billing month, each plan is applied to its own
+active day range. The prorated components are summed. No plan is applied to
+days outside its effective window.
+
+7. RESOLUTION OWNER
+Revenue Assurance owns plan exception resolution. Target resolution is five
+business days from exception creation.

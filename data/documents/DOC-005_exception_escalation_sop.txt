@@ -1,0 +1,54 @@
+TITLE: Exception Handling and Escalation SOP
+DOCUMENT_ID: DOC-005
+DOCUMENT_TYPE: SOP
+VERSION: 2.0
+EFFECTIVE_DATE: 2026-01-01
+DEPARTMENT: Operations
+ACCESS_LEVEL: INTERNAL
+CLASSIFICATION: SYNTHETIC
+
+1. SEVERITY LADDER
+Severity is INFO, LOW, MEDIUM, HIGH, or CRITICAL. Severity is assigned by
+deterministic rule, never by a language model and never by an unsupervised
+model score alone.
+
+2. REVENUE MOVEMENT THRESHOLDS
+A month-over-month revenue movement of 8 percent or more is LOW, 15 percent or
+more is MEDIUM, 25 percent or more is HIGH, and 40 percent or more is CRITICAL.
+Thresholds apply to the absolute value of the movement, so a sharp increase is
+escalated the same as a sharp decrease.
+
+3. EXCEPTION COUNT THRESHOLDS
+One or more validation exceptions in a location month is LOW, five or more is
+MEDIUM, ten or more is HIGH, and twenty or more is CRITICAL.
+
+4. MACHINE LEARNING DETECTIONS
+An IsolationForest detection with no corresponding rule breach is capped at LOW
+severity. An unsupervised score is a prompt to investigate, not grounds to
+escalate.
+
+5. ALERT CREATION
+An anomaly at MEDIUM severity or above creates an alert. Alerts below MEDIUM are
+recorded as anomalies only and are reviewed in the monthly data quality cycle.
+
+6. INVESTIGATION
+Investigation gathers SQL evidence, analytics evidence, and policy evidence
+before any conclusion is drawn. Where evidence does not support a root cause,
+the investigation returns INSUFFICIENT EVIDENCE. A root cause is never asserted
+from correlation alone.
+
+7. HUMAN APPROVAL
+Incident creation, ticket creation, and notification dispatch are sensitive
+actions and require approval by a Manager or Admin role. An Analyst may
+investigate but may not approve. A rejected approval terminates the workflow and
+no action executes.
+
+8. ESCALATION PATH
+MEDIUM escalates to the Operations Analyst queue. HIGH escalates to the
+Operations Manager within one business day. CRITICAL escalates to the Operations
+Manager immediately and requires a same-day incident record.
+
+9. IDEMPOTENCY
+An action is keyed by workflow and action type. A repeated request for an action
+already executed is recorded as DUPLICATE_SKIPPED and does not create a second
+incident, ticket, or notification.

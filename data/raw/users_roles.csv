@@ -1,0 +1,5 @@
+user_id,role,permission
+USR-001,Operations Analyst,INVESTIGATE
+USR-002,Finance User,VIEW_REVENUE
+USR-003,Manager,APPROVE_ACTION
+USR-004,Admin,CONFIGURE

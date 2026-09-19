@@ -1,0 +1,52 @@
+TITLE: Revenue Calculation SOP
+DOCUMENT_ID: DOC-001
+DOCUMENT_TYPE: SOP
+VERSION: 2.1
+EFFECTIVE_DATE: 2026-01-01
+DEPARTMENT: Finance Operations
+ACCESS_LEVEL: INTERNAL
+CLASSIFICATION: SYNTHETIC
+
+1. SCOPE
+This procedure defines how monthly subscription revenue is calculated for
+apartment water metering and device rental services. It applies to every
+billing month close.
+
+2. WATER REVENUE
+Water revenue = prorated base fee + measured consumption x approved rate.
+The base fee is prorated by active days: base_fee * (water_active_days /
+days_in_billing_month). Consumption is the sum of daily consumption_m3 readings
+for the water device within the billing month, multiplied by the plan's
+rate_per_m3. Consumption is never estimated or extrapolated.
+
+3. RENTAL REVENUE
+Rental revenue = monthly rental x active days / billing-month days. The rental
+device must have an activation date on or before the month end. A device
+deactivated mid-month is billed only for days up to and including the
+deactivation date.
+
+4. TOTAL REVENUE
+Total apartment revenue = water revenue + rental revenue. Location revenue is
+the sum of apartment revenue for that location code. Plan revenue is grouped by
+the plan assigned to the device during the billing month.
+
+5. ACTIVE DAYS
+Active days are the overlap between the device active window and the billing
+month, inclusive of both endpoints. A device activated on the 15th of a 30 day
+month has 16 active days. A device with zero overlap has zero active days and
+contributes zero revenue.
+
+6. MISSING INPUTS
+Never guess missing financial inputs. If a plan, rate, or device record
+required for a calculation is absent, the apartment row is written with
+validation_flag EXCEPTION and an exception_code identifying the missing input.
+Revenue for the affected component is recorded as zero and the row is routed to
+the manual validation queue. Imputing a value is prohibited.
+
+7. ROUNDING
+Monetary amounts are rounded half-up to two decimal places at the point the
+component is computed, not at aggregation time.
+
+8. RECALCULATION
+Revenue for a billing month is fully recomputed from source records. Rows are
+never hand-edited. A recalculation replaces all rows for that billing month.
