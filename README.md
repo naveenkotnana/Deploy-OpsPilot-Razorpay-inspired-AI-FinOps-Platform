@@ -19,7 +19,14 @@
   <img src="https://img.shields.io/badge/API_Cost-ZERO%20PAID%20APIs-blue?style=for-the-badge" alt="Zero External APIs" />
 </p>
 
+> [!NOTE]
+> **Synthetic Portfolio Project Notice**: All customer records, telemetry streams, and transaction amounts are synthetically generated. All AI inference is executed **100% locally via Ollama** (`llama3.2:1b`) with zero paid external APIs (no OpenAI, no Anthropic, no Gemini egress).
+
+---
+
 ## 🎬 Live Interactive Video Proof & Walkthrough
+
+Below is a live recorded session of the **OpsPilot** platform demonstrating the glassmorphic authentication gateway, the executive operations command center, deterministic revenue ledgers, and the local AI investigation copilot:
 
 <p align="center">
   <img src="assets/demo_walkthrough.gif" alt="OpsPilot Full Platform Video Walkthrough" width="900" style="border-radius: 14px; border: 1px solid #CBD5E1; box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);" />
@@ -27,47 +34,50 @@
 
 ### ⏱️ Video Demo Timestamps & Tour Highlights
 
-| Timestamp | Feature Demonstrated | Technical Capabilities |
+| Timestamp | Platform Feature | Technical Capabilities Demonstrated |
 | :--- | :--- | :--- |
-| **`00:00 - 00:06`** | **Glassmorphism Auth Gateway** | Ethereal sky backdrop, centered frosted card (`backdrop-filter: blur(24px)`), squircle icon. |
-| **`00:06 - 00:14`** | **Multi-Role Clearance Switcher** | Dedicated **Manager (L2)**, **Analyst (L1)**, and **Admin (L3)** portals with cyber infrastructure banner. |
-| **`00:14 - 00:30`** | **Operations Overview Command Center** | Real-time **Live Workflow** indicator, **Daily Reconciliation Ribbon** (99.8% match rate), and non-breaking KPI cards (`₹10.58 L`). |
+| **`00:00 - 00:06`** | **Glassmorphism Auth Gateway** | Ethereal pastel sky backdrop, centered frosted card (`backdrop-filter: blur(24px)`), squircle icon. |
+| **`00:06 - 00:14`** | **Multi-Role Clearance Switcher** | Dedicated **Manager (Level 2)**, **Analyst (Level 1)**, and **Admin (Level 3)** portals with cyber infrastructure banner. |
+| **`00:14 - 00:30`** | **Operations Overview Command Center** | Real-time **Live Workflow** indicator, **Daily Reconciliation Ribbon** (99.8% match rate), non-breaking KPI cards (`₹10.58 L`). |
 | **`00:30 - 00:42`** | **Revenue & Transactions Ledger** | Multi-dimensional SQL analytical queries, billing records breakdown, and export capabilities. |
 | **`00:42 - 00:52`** | **AI Investigation Copilot** | Local Ollama + RAG + LangGraph 10-node agent conducting root-cause anomaly analysis. |
 | **`00:52 - 01:00`** | **Approvals & Governance** | Human-in-the-loop action triage, exception mitigation, and cryptographic audit log ledger. |
 
 ---
 
-## 🌟 Key Architectural Pillars
+## 🎯 Problem Statement & Business Context
 
-OpsPilot is engineered as a **Razorpay-inspired enterprise FinOps platform** that reconciles high-volume utility meter telemetry, aggregates complex multi-tier billing, detects zero-day consumption anomalies with Machine Learning, and conducts AI root-cause investigations with local agentic workflows.
+A high-growth utility and smart-metering subscription business bills hundreds of residential apartment communities monthly across water consumption, hardware rentals, and tiered tariffs. Revenue is assembled from four moving parts:
 
-### 1. 📊 Deterministic Financial Reconciliation Engine
-- **Telemetry Batch Ingestion**: Ingests and validates **91,501 raw IoT telemetry records** across 500 residential apartments and 1,000 active utility meters.
-- **Multi-Tier Billing Aggregation**: Calculates deterministic rental plans, tiered volumetric water tariffs, base platform fees, and delta-variance adjustments across quarterly billing cycles.
-- **High-Precision Formatting**: Indian Rupee (`₹ xx,xx,xxx.xx`) and non-breaking Lakh (`₹10.58 L`) notations with automated period-over-period delta variance.
+1. **Device Activation Windows**: Dynamic device lifecycle states and meter onboarding dates.
+2. **Plan Assignments**: Multi-tier volumetric tariffs and fixed base fees.
+3. **Metered Consumption**: 90,000+ IoT telemetry readings per quarter with potential packet loss and sensor noise.
+4. **Proration & Adjustments**: Mid-month lease activations, meter replacements, and tariff revisions.
 
-### 2. 🤖 Local Agentic AI Copilot (LangGraph + Ollama + RAG)
-- **100% Free & Local**: Zero external paid APIs (no OpenAI, no Anthropic, no Gemini egress). Runs entirely locally on your CPU/GPU using **Ollama (`llama3.2:1b`)**.
-- **Deterministic Tool Calling**: Multi-step LangGraph state machine orchestrates SQL data retrieval, knowledge base retrieval, and root-cause analysis.
-- **Natural Language Investigation**: Operators can ask complex operational questions (*"Why did billing spike for Block B in June?", "Find meters with high leakage anomalies"*), producing structured remediation plans.
+### The Operational Challenge
+When monthly revenue shifts unexpectedly, financial operations analysts traditionally spend days manually pulling SQL logs, reading standard operating procedures (SOPs), cross-referencing tariff contracts, and calculating variance by hand. This process is slow, error-prone, and lacks an immutable audit trail.
 
-### 3. 🔍 Machine Learning Anomaly Detection
-- **IsolationForest Engine**: Multi-dimensional anomaly scoring on consumption volume, meter frequency, and daily variance.
-- **Operational Alerts**: Flags water leakages, zero-consumption meter failures, and reverse-flow tampering with automatic severity levels (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
+---
 
-### 4. 🛡️ Enterprise RBAC & Cryptographic Security
-- **3-Tier Clearance Model**:
-  - **Level 1 (Analyst)**: Read-only telemetry, SQL model execution, AI root-cause queries.
-  - **Level 2 (Manager)**: Full operational overview, exception remediation, human-in-the-loop action approval authority.
-  - **Level 3 (Administrator)**: Superuser governance, cryptographic audit verification, batch pipeline triggers.
-- **Cryptographic Audit Ledger**: Every mutation (approvals, recalculations, user logons) is chained using `HMAC-SHA256` hash pointers (`prev_hash -> curr_hash`), guaranteeing tamper-evident auditability.
+## 💡 The Solution: OpsPilot Architecture
+
+OpsPilot automates the entire journey from raw telemetry ingestion to human-approved operational remediations:
+
+1. **Ingests & Validates**: Runs strict data quality gates on 91,500+ IoT telemetry rows, flagging schema anomalies and missing data before ingestion.
+2. **Computes Deterministic Revenue**: Executes reproducible mathematical billing rules in SQL without relying on generative LLMs for arithmetic.
+3. **Detects Unsupervised Anomalies**: Combines **IsolationForest ML** with deterministic rule heuristics to flag consumption leaks, meter tampering, and silent dropouts.
+4. **Investigates with Agentic AI**: Orchestrates a 10-node **LangGraph state machine** that gathers allowlisted SQL evidence and citations from local policy SOPs.
+5. **Enforces Human-in-the-Loop Governance**: Halts at an explicit approval gate before executing any billing recalculation or meter reset.
+6. **Logs Tamper-Evident Audits**: Seals every operational action into a cryptographic `HMAC-SHA256` hash chain.
+
+> [!IMPORTANT]
+> **Core Architectural Principle**: The LLM is the least deterministic component in the stack, so it is strictly **sandboxed**. The LLM cannot execute raw arbitrary SQL, cannot perform unvalidated arithmetic, and cannot execute billing adjustments without Level 2/Level 3 clearance approval.
 
 ---
 
 ## 🎨 User Interface Showcase
 
-| Manager Portal (Glassmorphism UI) | Admin Governance & Infrastructure Shield |
+| Manager Portal (Glassmorphism Gateway) | Admin Governance & Infrastructure Shield |
 | :---: | :---: |
 | <img src="assets/login_screen.png" width="440" style="border-radius: 8px;" /> | <img src="assets/admin_portal.png" width="440" style="border-radius: 8px;" /> |
 | *Dreamy sky backdrop, centered frosted card & squircle icon* | *Platform Admin Level 3 Clearance with cyber shield banner* |
@@ -119,7 +129,7 @@ flowchart TD
 ### Prerequisites
 - Python 3.11+
 - Git
-- *(Optional)* [Ollama](https://ollama.ai/) with `ollama pull llama3.2:1b` (Fallback rule engine runs if Ollama is not installed).
+- *(Optional)* [Ollama](https://ollama.ai/) with `ollama pull llama3.2:1b` (Rule-based fallback engine automatically engages if Ollama is offline).
 
 ### 1. Clone & Install Dependencies
 ```bash
@@ -132,9 +142,9 @@ pip install -r requirements.txt
 ```bash
 python scripts/setup_all.py
 ```
-*Creates database schema, ingests 91,501 telemetry rows, executes quality gate checks, and calculates quarterly billing.*
+*Initializes database schema, ingests 91,501 telemetry rows, executes quality gate checks, and calculates quarterly billing.*
 
-### 3. Launch OpsPilot
+### 3. Launch OpsPilot Services
 ```bash
 # Terminal 1: Start FastAPI REST Backend
 uvicorn app.api.main:app --host 127.0.0.1 --port 8000
@@ -149,10 +159,10 @@ streamlit run dashboard/app.py
 
 ## 🔑 Default Authentication Credentials
 
-| Role | Username | Password | Clearance Level | Scope |
+| Role | Username | Password | Clearance Level | Permissions & Scope |
 | :--- | :--- | :--- | :--- | :--- |
-| **Operations Manager** | `manager` | `manager123` | **Level 2** | Full operations dashboard, exception triage & approval authority. |
-| **Revenue Analyst** | `analyst` | `analyst123` | **Level 1** | Telemetry monitoring, SQL model execution & AI investigation. |
+| **Operations Manager** | `manager` | `manager123` | **Level 2** | Full operations dashboard, exception triage & human approval authority. |
+| **Revenue Analyst** | `analyst` | `analyst123` | **Level 1** | Telemetry monitoring, SQL model execution & AI investigation copilot. |
 | **Platform Administrator**| `admin` | `admin123` | **Level 3** | Superuser governance, cryptographic audit ledger & pipeline controls. |
 
 ---
@@ -182,7 +192,7 @@ pytest tests/unit tests/integration -v
 
 ## 🐳 Docker Deployment
 
-To launch the full production environment using Docker Compose:
+To launch the containerized stack using Docker Compose:
 
 ```bash
 docker compose up -d --build
@@ -206,5 +216,5 @@ OpsPilot is engineered with **in-process standalone fallbacks** in `dashboard/co
 
 ## 📄 License & Attribution
 Designed & Engineered as a flagship FinOps Portfolio Project by **Naveen Kotnana**.  
-*Inspired by Razorpay's modern Indian fintech analytics aesthetics.*
+*Inspired by Razorpay's modern Indian fintech analytics aesthetics.*  
 Distributed under the **MIT License**.
