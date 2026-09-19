@@ -34,8 +34,9 @@ def api_call(method: str, path: str, **kw):
     h = kw.pop("headers", {})
     if st.session_state.get("token"):
         h["Authorization"] = f"Bearer {st.session_state['token']}"
+    timeout = kw.pop("timeout", (2.0, 180.0))
     try:
-        r = requests.request(method, f"{API_BASE}{path}", headers=h, timeout=180, **kw)
+        r = requests.request(method, f"{API_BASE}{path}", headers=h, timeout=timeout, **kw)
         if r.status_code >= 400:
             return None, f"{r.status_code}: {r.text[:300]}"
         return r.json(), None
@@ -44,10 +45,11 @@ def api_call(method: str, path: str, **kw):
         try:
             from app.db.base import SessionLocal
             from app.models import (
-                User, Alert, IngestionRun, ValidationResult, AuditLog, Approval, ActionRecord
+                User, Alert, IngestionRun, ValidationResult, AuditLog, Approval, ActionRecord, Anomaly, Workflow
             )
             from app.core.security import verify_password, create_access_token
             from app.agent.tools.sql_tool import run_named_query
+            from app.analytics.queries import QUERIES
             from urllib.parse import parse_qs, urlparse
 
             db = SessionLocal()
@@ -86,10 +88,44 @@ def api_call(method: str, path: str, **kw):
                         "observed_value": float(a.observed_value or 0),
                         "anomaly_score": float(a.anomaly_score or 0),
                         "evidence_summary": a.evidence_summary,
-                        "status": a.status
+                        "status": getattr(a, "status", "DETECTED")
                     } for a in alerts], None
 
-                # 4. Fallback for /data-quality
+                # 4. Fallback for /anomalies
+                if path == "/anomalies":
+                    anoms = db.query(Anomaly).all()
+                    return [{
+                        "anomaly_id": a.anomaly_id,
+                        "billing_month": a.billing_month,
+                        "entity_type": a.entity_type,
+                        "entity_id": a.entity_id,
+                        "metric": a.metric,
+                        "method": a.method,
+                        "anomaly_score": float(a.anomaly_score or 0),
+                        "severity": a.severity,
+                        "reason": a.reason,
+                        "observed_value": float(a.observed_value) if a.observed_value is not None else None,
+                        "expected_value": float(a.expected_value) if a.expected_value is not None else None,
+                        "created_at": str(a.created_at)
+                    } for a in anoms], None
+
+                # 5. Fallback for /incidents
+                if path == "/incidents":
+                    acts = db.query(ActionRecord).order_by(ActionRecord.timestamp.desc()).all()
+                    return [{
+                        "action_id": r.action_id,
+                        "workflow_id": r.workflow_id,
+                        "action_type": r.action_type,
+                        "status": r.status,
+                        "idempotency_key": r.idempotency_key,
+                        "timestamp": str(r.timestamp)
+                    } for r in acts], None
+
+                # 6. Fallback for /analytics/queries
+                if path == "/analytics/queries":
+                    return {"queries": list(QUERIES.keys())}, None
+
+                # 7. Fallback for /data-quality
                 if path == "/data-quality":
                     runs = db.query(IngestionRun).all()
                     checks = db.query(ValidationResult).all()
@@ -111,7 +147,7 @@ def api_call(method: str, path: str, **kw):
                         } for c in checks]
                     }, None
 
-                # 5. Fallback for /health
+                # 8. Fallback for /health
                 if path == "/health":
                     return {
                         "status": "ok",
@@ -120,7 +156,7 @@ def api_call(method: str, path: str, **kw):
                         "ollama_models": ["llama3.2:1b"]
                     }, None
 
-                # 6. Fallback for /metrics
+                # 9. Fallback for /metrics
                 if path == "/metrics":
                     return {
                         "status": "healthy",
@@ -129,31 +165,62 @@ def api_call(method: str, path: str, **kw):
                         "uptime_seconds": 3600
                     }, None
 
-                # 7. Fallback for /audit
+                # 10. Fallback for /audit
                 if path.startswith("/audit"):
-                    logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).limit(100).all()
+                    parsed = urlparse(path)
+                    params = parse_qs(parsed.query)
+                    wid = params.get("workflow_id", [None])[0]
+                    lim = int(params.get("limit", [200])[0])
+                    q = db.query(AuditLog)
+                    if wid:
+                        q = q.filter(AuditLog.workflow_id == wid)
+                    logs = q.order_by(AuditLog.timestamp.desc()).limit(lim).all()
                     return [{
-                        "id": l.id,
-                        "timestamp": l.timestamp.isoformat() if l.timestamp else "",
+                        "audit_id": l.audit_id,
+                        "workflow_id": l.workflow_id,
                         "user_id": l.user_id,
+                        "agent_node": l.agent_node,
+                        "tool_name": l.tool_name,
+                        "input_hash": l.input_hash,
+                        "result_status": l.result_status,
+                        "latency_ms": l.latency_ms,
+                        "approval_status": l.approval_status,
                         "action": l.action,
-                        "entity": l.entity,
-                        "status": l.status,
-                        "prev_hash": l.prev_hash,
-                        "curr_hash": l.curr_hash
+                        "timestamp": str(l.timestamp)
                     } for l in logs], None
 
-                # 8. Fallback for /investigate
-                if path == "/investigate" and method.upper() == "POST":
+                # 11. Fallback for /workflows/{wid}
+                if path.startswith("/workflows/") and not path.endswith(("/approve", "/reject")):
+                    wid = path.split("/")[2]
+                    w = db.query(Workflow).filter(Workflow.workflow_id == wid).first()
+                    if w:
+                        import json
+                        ev = json.loads(w.evidence_json) if w.evidence_json else {}
+                        rec = json.loads(w.recommendation_json) if w.recommendation_json else {"recommendation": w.recommendation}
+                        return {
+                            "workflow_id": w.workflow_id,
+                            "alert_id": w.alert_id,
+                            "status": w.status,
+                            "approval_status": w.approval_status,
+                            "final_action": w.final_action,
+                            "recommendation": rec,
+                            "evidence": ev,
+                            "errors": w.errors,
+                            "latency_ms": w.latency_ms
+                        }, None
+                    return None, f"404: Workflow '{wid}' not found"
+
+                # 12. Fallback for /investigate
+                if (path == "/investigate" or "/investigate" in path) and method.upper() == "POST":
                     from app.agent.graph import run_agent_workflow
                     body = kw.get("json", {})
-                    query = body.get("query", "")
+                    query = body.get("question") or body.get("query", "")
                     res = run_agent_workflow(query=query, role=st.session_state.get("role", "MANAGER"))
                     return res, None
 
             finally:
                 db.close()
-        except Exception:
+        except Exception as e:
             pass
 
         return None, (

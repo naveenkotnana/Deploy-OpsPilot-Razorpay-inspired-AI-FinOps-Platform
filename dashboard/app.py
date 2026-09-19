@@ -14,15 +14,18 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import streamlit as st
 
-# Auto-initialize database schema and demo users for standalone Streamlit Cloud deployments
+# Auto-initialize database schema, demo users, and synthetic data for standalone Streamlit Cloud deployments
 try:
     from app.db.base import init_db, SessionLocal
     from app.core.security import seed_demo_users
-    from app.models import User
+    from app.models import User, MonthlyRevenue
     init_db()
     with SessionLocal() as _bootstrap_db:
         if _bootstrap_db.query(User).count() == 0:
             seed_demo_users(_bootstrap_db)
+        if _bootstrap_db.query(MonthlyRevenue).count() == 0:
+            from scripts.setup_all import main as _setup_data
+            _setup_data()
 except Exception:
     pass
 

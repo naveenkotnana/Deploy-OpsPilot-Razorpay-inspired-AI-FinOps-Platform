@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 .env
 *.db
+!opspilot.db
 .pytest_cache/
 .venv/
 venv/
