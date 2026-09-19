@@ -19,13 +19,22 @@
   <img src="https://img.shields.io/badge/API_Cost-ZERO%20PAID%20APIs-blue?style=for-the-badge" alt="Zero External APIs" />
 </p>
 
----
-
-## 🚀 Live Interactive Demo Recording
+## 🎬 Live Interactive Video Proof & Walkthrough
 
 <p align="center">
-  <img src="assets/demo_recording.webp" alt="OpsPilot Live Verification Recording" width="900" style="border-radius: 12px; border: 1px solid #E2E8F0;" />
+  <img src="assets/demo_recording.webp" alt="OpsPilot Full Platform Video Walkthrough" width="900" style="border-radius: 14px; border: 1px solid #CBD5E1; box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);" />
 </p>
+
+### ⏱️ Video Demo Timestamps & Tour Highlights
+
+| Timestamp | Feature Demonstrated | Technical Capabilities |
+| :--- | :--- | :--- |
+| **`00:00 - 00:06`** | **Glassmorphism Auth Gateway** | Ethereal sky backdrop, centered frosted card (`backdrop-filter: blur(24px)`), squircle icon. |
+| **`00:06 - 00:14`** | **Multi-Role Clearance Switcher** | Dedicated **Manager (L2)**, **Analyst (L1)**, and **Admin (L3)** portals with cyber infrastructure banner. |
+| **`00:14 - 00:30`** | **Operations Overview Command Center** | Real-time **Live Workflow** indicator, **Daily Reconciliation Ribbon** (99.8% match rate), and non-breaking KPI cards (`₹10.58 L`). |
+| **`00:30 - 00:42`** | **Revenue & Transactions Ledger** | Multi-dimensional SQL analytical queries, billing records breakdown, and export capabilities. |
+| **`00:42 - 00:52`** | **AI Investigation Copilot** | Local Ollama + RAG + LangGraph 10-node agent conducting root-cause anomaly analysis. |
+| **`00:52 - 01:00`** | **Approvals & Governance** | Human-in-the-loop action triage, exception mitigation, and cryptographic audit log ledger. |
 
 ---
 
