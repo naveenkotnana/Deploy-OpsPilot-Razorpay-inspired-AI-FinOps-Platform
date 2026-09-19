@@ -14,6 +14,18 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import streamlit as st
 
+# Auto-initialize database schema and demo users for standalone Streamlit Cloud deployments
+try:
+    from app.db.base import init_db, SessionLocal
+    from app.core.security import seed_demo_users
+    from app.models import User
+    init_db()
+    with SessionLocal() as _bootstrap_db:
+        if _bootstrap_db.query(User).count() == 0:
+            seed_demo_users(_bootstrap_db)
+except Exception:
+    pass
+
 from dashboard.components import api_call, get_image_base64
 from dashboard.styles import RAZORPAY_THEME_CSS
 from dashboard.views.analytics import render_analytics
