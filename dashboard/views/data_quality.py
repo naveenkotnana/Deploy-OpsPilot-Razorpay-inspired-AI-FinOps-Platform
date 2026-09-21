@@ -107,58 +107,120 @@ def render_data_quality(role: str):
 
     c1, c2 = st.columns([1, 2])
     with c1:
-        target_dataset = st.selectbox(
+        target_dataset_opt = st.selectbox(
             "Target Ingestion Table",
-            options=["water_usage_data", "building_master", "apartment_master", "device_service_master", "water_plan_data"],
-            index=0
+            options=[
+                "Auto-Detect from Filename / Schema",
+                "building_master",
+                "apartment_master",
+                "device_service_master",
+                "rental_plan_data",
+                "water_plan_data",
+                "device_plan_assignments",
+                "water_usage_data",
+            ],
+            index=0,
+            help="Select a specific table or let OpsPilot automatically match each file."
         )
     with c2:
-        uploaded_file = st.file_uploader("Upload Batch CSV", type=["csv"], help="Select CSV file to ingest")
+        uploaded_files = st.file_uploader(
+            "Upload Batch CSV(s)",
+            type=["csv"],
+            accept_multiple_files=True,
+            help="Select or drop one or more operational CSV files to ingest simultaneously"
+        )
 
-    if uploaded_file is not None:
-        try:
-            df_upload = pd.read_csv(uploaded_file)
-            st.info(f"Loaded {len(df_upload):,} records. Columns: `{', '.join(df_upload.columns.tolist()[:5])}`")
-            if st.button("Validate Schema & Ingest into Automation Pipeline", type="primary"):
-                from app.db.base import SessionLocal
-                from app.services import validation as V
-                from app.services.ingestion import _run, _d
-                from app.models import WaterUsage
-                from app.services.revenue import calculate_all_months
+    if uploaded_files:
+        from app.services.ingestion import infer_dataset_name, ingest_dataframe, TABLE_ORDER
+        from app.services.revenue import calculate_all_months
+        from app.db.base import SessionLocal
 
+        st.markdown(f"**Selected {len(uploaded_files)} file(s):**")
+        file_entries = []
+        for f in uploaded_files:
+            try:
+                f.seek(0)
+                df_peek = pd.read_csv(f)
+                if target_dataset_opt == "Auto-Detect from Filename / Schema":
+                    target_table = infer_dataset_name(f.name, df_peek.columns.tolist())
+                else:
+                    target_table = target_dataset_opt
+
+                file_entries.append({
+                    "file_obj": f,
+                    "filename": f.name,
+                    "df": df_peek,
+                    "target_table": target_table,
+                    "rows": len(df_peek),
+                    "cols": len(df_peek.columns),
+                    "col_preview": ", ".join(df_peek.columns.tolist()[:4])
+                })
+            except Exception as e:
+                st.error(f"Error reading `{f.name}`: {e}")
+
+        if file_entries:
+            summary_preview = [
+                {
+                    "File": fe["filename"],
+                    "Target Table": fe["target_table"],
+                    "Rows": fe["rows"],
+                    "Columns": fe["cols"],
+                    "Sample Fields": fe["col_preview"]
+                }
+                for fe in file_entries
+            ]
+            st.dataframe(pd.DataFrame(summary_preview), use_container_width=True, hide_index=True)
+
+            if st.button("Validate Schema & Ingest into Automation Pipeline", type="primary", key="btn_multi_ingest"):
                 db = SessionLocal()
-                try:
-                    checks = [
-                        V.schema_match(df_upload, [df_upload.columns[0]]),
-                        V.null_rate(df_upload, [df_upload.columns[0]]),
-                        V.duplicate_rate(df_upload, [df_upload.columns[0]]),
-                        V.row_count(df_upload)
-                    ]
-                    def load_fn(d, x):
-                        if target_dataset == "water_usage_data" and "consumption_m3" in x.columns:
-                            rows = []
-                            for r in x.head(1000).itertuples():
-                                rows.append(WaterUsage(
-                                    usage_id=str(r.usage_id),
-                                    device_id=str(r.device_id),
-                                    usage_date=_d(getattr(r, "usage_date", None)),
-                                    consumption_m3=float(getattr(r, "consumption_m3", 0.0))
-                                ))
-                            for row in rows:
-                                d.merge(row)
-                            return len(rows), 0
-                        return len(x), 0
+                # Sort entries by dependency order to satisfy foreign keys
+                def get_order(item):
+                    tbl = item["target_table"]
+                    return TABLE_ORDER.index(tbl) if tbl in TABLE_ORDER else 99
 
-                    res = _run(db, target_dataset, df_upload, checks, load_fn)
-                    if res["status"] == "FAIL":
-                        st.error(f"Validation Gate Failed: {res}")
-                    else:
-                        st.success(f"Validation PASSED! Successfully ingested {res['loaded']} records into {target_dataset}. Run ID: {res['run_id']}")
-                        calculate_all_months(verbose=False)
-                        st.rerun()
-                finally:
-                    db.close()
-        except Exception as exc:
-            st.error(f"Ingestion failed: {exc}")
+                sorted_entries = sorted(file_entries, key=get_order)
+                results = []
+                all_passed = True
+
+                with st.spinner("Executing schema validation gates and database ingestion..."):
+                    try:
+                        for entry in sorted_entries:
+                            res = ingest_dataframe(db, entry["target_table"], entry["df"])
+                            is_pass = res.get("status") != "FAIL"
+                            if not is_pass:
+                                all_passed = False
+                            results.append({
+                                "File": entry["filename"],
+                                "Table": res.get("source"),
+                                "Status": res.get("status"),
+                                "Received": res.get("received"),
+                                "Loaded": res.get("loaded"),
+                                "Rejected": res.get("rejected"),
+                                "Run ID": res.get("run_id")
+                            })
+
+                        db.commit()
+
+                        # Trigger deterministic revenue re-calculation
+                        recalc_info = ""
+                        try:
+                            rev_res = calculate_all_months(db=db, verbose=False)
+                            recalc_info = f" Deterministic revenue successfully recalculated across {len(rev_res)} billing months."
+                        except Exception as rev_err:
+                            recalc_info = f" (Warning: Revenue recalculation noted: {rev_err})"
+
+                        if all_passed:
+                            st.success(f"All {len(results)} file(s) PASSED validation gates and were ingested successfully!{recalc_info}")
+                        else:
+                            st.warning(f"Batch ingestion completed with warnings or validation failures. Review results below.{recalc_info}")
+
+                        st.dataframe(pd.DataFrame(results), use_container_width=True, hide_index=True)
+                        st.info("💡 You can navigate to Overview or Revenue views to see updated operational metrics.")
+
+                    except Exception as exc:
+                        db.rollback()
+                        st.error(f"Ingestion pipeline encountered an error: {exc}")
+                    finally:
+                        db.close()
 
     st.markdown("</div>", unsafe_allow_html=True)

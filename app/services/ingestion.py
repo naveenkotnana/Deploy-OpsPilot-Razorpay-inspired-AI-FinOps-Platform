@@ -195,5 +195,215 @@ def ingest_all(verbose=True):
         db.close()
 
 
+TABLE_ORDER = [
+    "building_master",
+    "apartment_master",
+    "rental_plan_data",
+    "water_plan_data",
+    "device_service_master",
+    "device_plan_assignments",
+    "water_usage_data",
+]
+
+
+def infer_dataset_name(filename: str, columns: list) -> str:
+    """Infers the dataset table name from filename or dataframe columns."""
+    clean_name = filename.lower().replace("-", "_").replace(" ", "_")
+    for key in TABLE_ORDER:
+        if key in clean_name:
+            return key
+
+    if "building" in clean_name:
+        return "building_master"
+    if "apartment" in clean_name:
+        return "apartment_master"
+    if "device" in clean_name and "plan" not in clean_name and "assign" not in clean_name:
+        return "device_service_master"
+    if "rental" in clean_name:
+        return "rental_plan_data"
+    if "water_plan" in clean_name:
+        return "water_plan_data"
+    if "assignment" in clean_name or "plan_assign" in clean_name:
+        return "device_plan_assignments"
+    if "usage" in clean_name or "telemetry" in clean_name:
+        return "water_usage_data"
+
+    cols = [str(c).lower() for c in columns]
+    if "consumption_m3" in cols or "usage_id" in cols:
+        return "water_usage_data"
+    if "assignment_id" in cols:
+        return "device_plan_assignments"
+    if "rental_plan_id" in cols:
+        return "rental_plan_data"
+    if "water_plan_id" in cols:
+        return "water_plan_data"
+    if "device_id" in cols and ("service_type" in cols or "device_type" in cols):
+        return "device_service_master"
+    if "apartment_id" in cols and "building_id" in cols:
+        return "apartment_master"
+    if "building_id" in cols and "location_code" in cols:
+        return "building_master"
+
+    return "water_usage_data"
+
+
+def ingest_dataframe(db: Session, source: str, df: pd.DataFrame) -> dict:
+    """Validate and ingest an arbitrary dataframe for a recognized schema."""
+    target = source.strip().lower()
+
+    if target == "building_master":
+        checks = [
+            V.schema_match(df, ["building_id", "location_code"]),
+            V.null_rate(df, ["building_id", "location_code"]),
+            V.duplicate_rate(df, ["building_id"]),
+            V.row_count(df),
+        ]
+        return _run(db, "building_master", df, checks, lambda d, x: _bulk(d, [
+            Building(building_id=str(r.building_id),
+                     location_code=str(r.location_code),
+                     building_type=getattr(r, "building_type", "RESIDENTIAL"),
+                     status=getattr(r, "status", "ACTIVE"))
+            for r in x.itertuples()
+        ]))
+
+    elif target == "apartment_master":
+        bkeys = {r[0] for r in db.execute(sa_text("SELECT building_id FROM buildings")).all()}
+        checks = [
+            V.schema_match(df, ["apartment_id", "building_id", "location_code"]),
+            V.null_rate(df, ["apartment_id", "location_code"]),
+            V.duplicate_rate(df, ["apartment_id"]),
+            V.date_validity(df, ["activation_date"]),
+            V.row_count(df),
+        ]
+        if bkeys:
+            checks.append(V.referential_integrity(df, "building_id", bkeys, "apartment->building"))
+        return _run(db, "apartment_master", df, checks, lambda d, x: _bulk(d, [
+            Apartment(apartment_id=str(r.apartment_id),
+                      building_id=str(r.building_id),
+                      location_code=str(r.location_code),
+                      apartment_type=getattr(r, "apartment_type", "FLAT"),
+                      activation_date=_d(getattr(r, "activation_date", None)),
+                      status=getattr(r, "status", "OCCUPIED"))
+            for r in x.itertuples()
+        ]))
+
+    elif target == "device_service_master":
+        akeys = {r[0] for r in db.execute(sa_text("SELECT apartment_id FROM apartments")).all()}
+        checks = [
+            V.schema_match(df, ["device_id", "apartment_id", "service_type"]),
+            V.null_rate(df, ["device_id", "apartment_id"]),
+            V.duplicate_rate(df, ["device_id"]),
+            V.date_validity(df, ["installation_date", "activation_date", "deactivation_date"]),
+            V.row_count(df),
+        ]
+        if akeys:
+            checks.append(V.referential_integrity(df, "apartment_id", akeys, "device->apartment"))
+        if "installation_date" in df.columns:
+            miss = int(df["installation_date"].isna().sum())
+            checks.append(V.CheckResult("MISSING_INSTALLATION_DATE", "PASS" if miss == 0 else "WARN", str(miss), "0"))
+        return _run(db, "device_service_master", df, checks, lambda d, x: _bulk(d, [
+            Device(device_id=str(r.device_id),
+                   apartment_id=str(r.apartment_id),
+                   service_type=str(r.service_type),
+                   device_type=getattr(r, "device_type", "SMART_METER"),
+                   installation_date=_d(getattr(r, "installation_date", None)),
+                   activation_date=_d(getattr(r, "activation_date", None)),
+                   deactivation_date=_d(getattr(r, "deactivation_date", None)),
+                   device_status=getattr(r, "device_status", "ACTIVE"))
+            for r in x.itertuples()
+        ]))
+
+    elif target == "rental_plan_data":
+        checks = [
+            V.schema_match(df, ["rental_plan_id", "monthly_rental"]),
+            V.null_rate(df, ["rental_plan_id", "monthly_rental"]),
+            V.duplicate_rate(df, ["rental_plan_id"]),
+            V.value_range(df, "monthly_rental", lo=0),
+            V.row_count(df),
+        ]
+        return _run(db, "rental_plan_data", df, checks, lambda d, x: _bulk(d, [
+            RentalPlan(rental_plan_id=str(r.rental_plan_id),
+                       plan_name=getattr(r, "plan_name", "Standard Rental"),
+                       monthly_rental=float(r.monthly_rental),
+                       effective_from=_d(getattr(r, "effective_from", None)),
+                       effective_to=_d(getattr(r, "effective_to", None)))
+            for r in x.itertuples()
+        ]))
+
+    elif target == "water_plan_data":
+        checks = [
+            V.schema_match(df, ["water_plan_id", "base_fee", "rate_per_m3"]),
+            V.null_rate(df, ["water_plan_id", "base_fee", "rate_per_m3"]),
+            V.duplicate_rate(df, ["water_plan_id"]),
+            V.value_range(df, "rate_per_m3", lo=0),
+            V.row_count(df),
+        ]
+        return _run(db, "water_plan_data", df, checks, lambda d, x: _bulk(d, [
+            WaterPlan(water_plan_id=str(r.water_plan_id),
+                      plan_name=getattr(r, "plan_name", "Standard Water"),
+                      base_fee=float(r.base_fee),
+                      rate_per_m3=float(r.rate_per_m3),
+                      effective_from=_d(getattr(r, "effective_from", None)),
+                      effective_to=_d(getattr(r, "effective_to", None)))
+            for r in x.itertuples()
+        ]))
+
+    elif target == "device_plan_assignments":
+        akeys = {r[0] for r in db.execute(sa_text("SELECT apartment_id FROM apartments")).all()}
+        checks = [
+            V.schema_match(df, ["assignment_id", "apartment_id", "plan_id"]),
+            V.null_rate(df, ["assignment_id", "plan_id"]),
+            V.duplicate_rate(df, ["assignment_id"]),
+            V.row_count(df),
+        ]
+        if akeys:
+            checks.append(V.referential_integrity(df, "apartment_id", akeys, "assignment->apartment"))
+        return _run(db, "device_plan_assignments", df, checks, lambda d, x: _bulk(d, [
+            PlanAssignment(assignment_id=str(r.assignment_id),
+                           apartment_id=str(r.apartment_id),
+                           service_type=getattr(r, "service_type", "WATER"),
+                           device_id=getattr(r, "device_id", None),
+                           plan_id=str(r.plan_id),
+                           effective_from=_d(getattr(r, "effective_from", None)),
+                           effective_to=_d(getattr(r, "effective_to", None)),
+                           assignment_status=getattr(r, "assignment_status", "ACTIVE"))
+            for r in x.itertuples()
+        ]))
+
+    elif target == "water_usage_data":
+        dkeys = {r[0] for r in db.execute(sa_text("SELECT device_id FROM devices")).all()}
+        checks = [
+            V.schema_match(df, ["usage_id", "device_id", "usage_date", "consumption_m3"]),
+            V.null_rate(df, ["usage_id", "device_id", "usage_date"]),
+            V.duplicate_rate(df, ["usage_id"]),
+            V.value_range(df, "consumption_m3", lo=0, hi=100),
+            V.date_validity(df, ["usage_date"]),
+            V.row_count(df, 1),
+        ]
+        if dkeys:
+            checks.append(V.referential_integrity(df, "device_id", dkeys, "usage->device"))
+
+        def load_usage_batch(d, x):
+            received = len(x)
+            x_dedup = x.drop_duplicates(subset=["usage_id"])
+            rows = x_dedup.to_dict("records")
+            for rec in rows:
+                rec["usage_date"] = _d(rec["usage_date"])
+                d.merge(WaterUsage(**rec))
+            return len(rows), received - len(rows)
+
+        return _run(db, "water_usage_data", df, checks, load_usage_batch)
+
+    else:
+        checks = [
+            V.schema_match(df, [df.columns[0]]),
+            V.null_rate(df, [df.columns[0]]),
+            V.duplicate_rate(df, [df.columns[0]]),
+            V.row_count(df),
+        ]
+        return _run(db, target, df, checks, lambda d, x: (len(x), 0))
+
+
 if __name__ == "__main__":
     ingest_all()
+

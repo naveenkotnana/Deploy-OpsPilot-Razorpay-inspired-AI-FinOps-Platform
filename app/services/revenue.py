@@ -163,3 +163,29 @@ def compute_month(db: Session, billing_month: str) -> dict:
     total = sum(float(r.total_revenue) for r in out)
     return {"billing_month": billing_month, "apartments": len(out),
             "exceptions": exceptions, "total_revenue": round(total, 2)}
+
+
+MONTHS = ["2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"]
+
+
+def calculate_all_months(db: Optional[Session] = None, months: Optional[list] = None, verbose: bool = False) -> list:
+    """Calculates deterministic revenue across all configured billing months."""
+    from app.db.base import SessionLocal
+
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
+    try:
+        target_months = months or MONTHS
+        results = []
+        for m in target_months:
+            res = compute_month(db, m)
+            results.append(res)
+            if verbose:
+                print(f"Computed {m}: {res}")
+        return results
+    finally:
+        if close_db:
+            db.close()
+
