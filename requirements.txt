@@ -31,3 +31,7 @@ requests>=2.31
 pytest>=7.4
 pytest-cov>=4.1
 httpx>=0.26
+
+
+# MCP Server
+mcp-server>=0.1.0

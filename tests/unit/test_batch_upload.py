@@ -30,6 +30,12 @@ def test_ingest_dataframe_and_revenue_recalc():
         rev_res = calculate_all_months(db=db)
         assert len(rev_res) >= 1
     finally:
+        try:
+            from sqlalchemy import text
+            db.execute(text("DELETE FROM buildings WHERE building_id = 'BLD-TEST-99'"))
+            db.commit()
+        except Exception:
+            pass
         db.close()
 
 
