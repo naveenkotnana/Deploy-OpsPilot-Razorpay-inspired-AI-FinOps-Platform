@@ -47,8 +47,8 @@ def main():
     db.close()
     print(f"\nDone in {time.time()-t0:.1f}s")
     print("\nNext:")
-    print("  uvicorn app.api.main:app --reload          # API  -> localhost:8000/docs")
-    print("  streamlit run dashboard/app.py             # UI   -> localhost:8501")
+    print("  uvicorn backend:app --reload               # API  -> localhost:8000/docs")
+    print("  streamlit run frontend.py                  # UI   -> localhost:8501")
     print("  python scripts/run_rag_eval.py             # measured RAG metrics")
     print("  python scripts/run_agent_eval.py           # measured agent/security metrics")
 

@@ -6,8 +6,8 @@
 pip install -r requirements.txt
 cp .env.example .env          # set JWT_SECRET
 python scripts/setup_all.py
-uvicorn app.api.main:app --reload
-streamlit run dashboard/app.py
+uvicorn backend:app --reload
+streamlit run frontend.py
 ```
 
 Defaults to SQLite. No Postgres or Docker required.

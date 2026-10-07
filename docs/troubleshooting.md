@@ -10,7 +10,7 @@ Drop to `qwen2.5:1.5b` (~1 GB), or lower `num_ctx` in `ollama_client.generate`. 
 Fixed — usage is a full-refresh source and the table is cleared before insert. If you see it on an older checkout, delete `opspilot.db` and re-run `setup_all.py`.
 
 **Dashboard: "API unreachable"**
-Start the API first (`uvicorn app.api.main:app --reload`). In Docker, `API_BASE_URL` must be `http://api:8000`, not `localhost`.
+Start the API first (`uvicorn backend:app --reload`). In Docker, `API_BASE_URL` must be `http://api:8000`, not `localhost`.
 
 **401 on every endpoint**
 Sign in via `/auth/login`. Tokens expire after `JWT_EXPIRE_MINUTES` (default 120).

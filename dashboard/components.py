@@ -225,7 +225,7 @@ def api_call(method: str, path: str, **kw):
 
         return None, (
             "API Service Offline (127.0.0.1:8000). "
-            "Please ensure 'uvicorn app.api.main:app' is running."
+            "Please ensure 'uvicorn backend:app' is running."
         )
 
 

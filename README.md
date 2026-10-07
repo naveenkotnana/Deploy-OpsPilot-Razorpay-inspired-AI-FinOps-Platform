@@ -147,10 +147,10 @@ python scripts/setup_all.py
 ### 3. Launch OpsPilot Services
 ```bash
 # Terminal 1: Start FastAPI REST Backend
-uvicorn app.api.main:app --host 127.0.0.1 --port 8000
+uvicorn backend:app --host 127.0.0.1 --port 8000
 
 # Terminal 2: Start Streamlit Dashboard UI
-streamlit run dashboard/app.py
+streamlit run frontend.py
 ```
 - Open **Dashboard**: [http://localhost:8501](http://localhost:8501)
 - Open **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
@@ -209,7 +209,7 @@ OpsPilot is engineered with **in-process standalone fallbacks** in `dashboard/co
 
 1. Fork or push this repository to your GitHub account.
 2. Go to [share.streamlit.io](https://share.streamlit.io) and click **"New app"**.
-3. Select your repository, branch `main`, and set **Main file path**: `dashboard/app.py`.
+3. Select your repository, branch `main`, and set **Main file path**: `frontend.py`.
 4. Click **Deploy!**
 
 ---

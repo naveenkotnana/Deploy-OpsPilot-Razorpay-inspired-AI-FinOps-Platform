@@ -31,7 +31,7 @@ services:
     extra_hosts: ["host.docker.internal:host-gateway"]
     command: >
       sh -c "python scripts/setup_all.py &&
-             uvicorn app.api.main:app --host 0.0.0.0 --port 8000"
+             uvicorn backend:app --host 0.0.0.0 --port 8000"
 
   dashboard:
     build: {context: ., dockerfile: docker/Dockerfile.dashboard}

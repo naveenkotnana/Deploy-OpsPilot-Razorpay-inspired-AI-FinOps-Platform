@@ -15,8 +15,10 @@
 | Agent | `app/agent/workflow.py` | One LangGraph workflow, 10 nodes |
 | Tools | `app/agent/tools/` | SQL, RAG, analytics, actions |
 | Safety | `app/agent/evidence.py` | Evidence sufficiency + numeric grounding |
-| API | `app/api/main.py` | FastAPI, JWT, RBAC |
-| UI | `dashboard/app.py` | Streamlit, 10 pages |
+| API entrypoint | `backend.py` | Exposes the FastAPI application |
+| API implementation | `app/api/main.py` | FastAPI, JWT, RBAC |
+| UI entrypoint | `frontend.py` | Starts the Streamlit dashboard |
+| UI implementation | `dashboard/app.py` | Streamlit, 10 pages |
 
 ## The core security idea
 
